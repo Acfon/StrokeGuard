@@ -1,5 +1,3 @@
-from pandas.core.interchange.dataframe_protocol import DataFrame
-
 from PyQt6 import uic
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from imblearn.over_sampling import SMOTE
