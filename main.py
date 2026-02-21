@@ -8,20 +8,19 @@ import numpy as np
 import sys
 from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
-from sklearn.metrics import classification_report
 from sklearn.preprocessing import MinMaxScaler
 STAT = []
 df = pd.read_csv('dataset.csv')
-df.head()
 df.drop('id', axis=1, inplace=True)
 df.fillna(df['bmi'].mean(), inplace=True)
 df["gender"] = df["gender"].replace({'Male':0,'Female':1,'Other':-1}).astype(np.int64)
 x = df[['gender','age','hypertension','heart_disease','avg_glucose_level','bmi']]
-print(x)
+dt_max = pd.Series(x.max(), index=x.columns)
+dt_min = pd.Series(x.min(), index=x.columns)
+
 y = df['stroke']
 scaler = MinMaxScaler()
 scaled = scaler.fit_transform(x)
-print(scaled)
 x = pd.DataFrame(scaled, columns=x.columns)
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 smote = SMOTE(random_state=42)
@@ -50,12 +49,15 @@ class RiskOpred(QMainWindow):
         glukose = self.doubleSpinBox.value()
         bmi = self.doubleSpinBox_2.value()
         dt = pd.DataFrame({"gender": [gend], "age": [age], "hypertension": [hipert], "heart_disease": [dis], "avg_glucose_level": [glukose], "bmi": [bmi] })
-        dt_max = df
-        scaler = MinMaxScaler()
-        scaled = scaler.fit_transform(dt)
-        print(dt.var())
-        print(scaled)
-        xgb_pred2 = xgb.predict(scaled)
+        dt.loc[len(dt)] = dt_max
+        dt.loc[len(dt)] = dt_min
+        dt = dt.rename(str, axis="columns")
+        print(dt)
+        scaler2 = MinMaxScaler()
+        scaled2 = scaler2.fit_transform(dt)
+        a = pd.Series(scaled2[0], index=x.columns)
+        b = pd.DataFrame({"gender": [a[0]], "age": [a[1]], "hypertension": [a[2]], "heart_disease": [a[3]], "avg_glucose_level": [a[4]], "bmi": [a[5]]})
+        xgb_pred2 = xgb.predict(b)
         if xgb_pred2[0] == 1:
             self.label_11.setText("ВНИМАНИЕ ВЫ В ЗОНЕ РИСКА, СОВЕТУЕМ ПРОВЕРИТЬСЯ У ВРАЧА")
         else:
